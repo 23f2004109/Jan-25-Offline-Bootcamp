@@ -39,7 +39,14 @@ with app.app_context():
 
     admin = User.query.filter_by(email = 'admin@gmail.com').first()
     if not admin:
-        
+        admin = User(
+            name = 'admin',
+            email = 'admin@gmail.com',
+            password = '1234567890',
+            roles = [admin_role]
+        )
+        db.session.add(admin)
+
 
         # admin = User(
         # name = 'admin',
@@ -52,6 +59,7 @@ with app.app_context():
 
         # user = User.query.filter_by(email = 'admin@gmail.com').first()
         # role = Role.query.filter_by(name = 'admin').first()
+
 
         # user_role = UserRole(
         #     user_id = user.id,

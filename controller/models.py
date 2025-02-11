@@ -9,6 +9,8 @@ class User(db.Model):
     # role_id = db.Column(db.Integer, db.ForeignKey('Role.id'), nullable=False)
     # role_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False)
 
+    roles = db.relationship('Role', secondary='user_role')
+
 class Role(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False)
