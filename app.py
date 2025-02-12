@@ -4,6 +4,7 @@ from controller.models import *
 
 app = Flask(__name__,template_folder='views')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+app.config['SECRET_KEY'] = 'thisissecretkey'
 db.init_app(app)
 
 with app.app_context():
