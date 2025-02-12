@@ -13,8 +13,9 @@ with app.app_context():
     admin_role = Role.query.filter_by(name = 'admin').first()
     if not admin_role:
         admin_role = Role(
-            name = 'admin',
-            description = 'admin role'
+            description = 'admin role',
+            name = 'admin'
+            
         )
 
         db.session.add(admin_role)
