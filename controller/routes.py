@@ -162,6 +162,91 @@ def activate_user(id):
 
 
 
-@app.route('/about')
-def about():
-    return 'The about page' 
+@app.route('/add_category', methods=['GET', 'POST'])
+def add_category():
+    if not session.get('user_email',None) or session.get('role', None) != 'admin':
+        flash('Unauthorized Access')
+        return redirect(url_for('home'))
+    
+    if request.method == "GET":
+        return render_template('add_category.html')
+    
+    if request.method == "POST":
+        name = request.form.get('name', None)
+        description = request.form.get('description', None)
+
+        if not name or not description:
+            flash('Please fill all fields')
+            return render_template('add_category.html')
+        
+        category = Categories.query.filter_by(name = name).all()
+        if category:
+            flash('Category already exists')
+            return render_template('add_category.html')
+        
+        category = Categories(
+            name = name,
+            description = description
+        )
+
+        db.session.add(category)
+        db.session.commit()
+
+        flash('Category added successfully')
+        return redirect(url_for('add_category'))
+    
+@app.route('/edit_category/<int:id>', methods=['GET', 'POST'])
+def edit_category(id):
+    if not session.get('user_email',None) or session.get('role', None) != 'admin':
+        flash('Unauthorized Access')
+        return redirect(url_for('home'))
+    
+    category = Categories.query.get(id)
+    if not category:
+        flash('Category not found')
+        return redirect(url_for('home'))
+    
+    if request.method == "GET":
+        return render_template('edit_category.html', category=category)
+    
+    if request.method == "POST":
+        name = request.form.get('name', None)
+        description = request.form.get('description', None)
+
+        new_category = Categories.query.filter_by(name = name).first()
+
+        if new_category and new_category.id != category.id:
+            flash('Category with this name already exists')
+            return render_template('edit_category.html', category=category)
+        
+
+        if name:
+            category.name = name
+
+        if description:
+            category.description = description
+
+        db.session.commit()
+
+        flash('Category updated successfully')
+        return redirect(url_for('home'))
+    
+
+@app.route('/delete_category/<int:id>')
+def delete_category(id):
+    if not session.get('user_email',None) or session.get('role', None) != 'admin':
+        flash('Unauthorized Access')
+        return redirect(url_for('home'))
+    
+    category = Categories.query.get(id)
+
+    if not category:
+        flash('Category not found')
+        return redirect(url_for('home'))
+    
+    db.session.delete(category)
+    db.session.commit()
+
+    flash('Category deleted successfully')
+    return redirect(url_for('home'))
+
