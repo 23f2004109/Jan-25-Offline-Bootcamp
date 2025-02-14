@@ -1,0 +1,46 @@
+{%extends 'base.html' %}
+
+{%block title %} Manage Users {%endblock %}
+
+{%block content %}
+    <h1>Manage Users</h1>
+    <h3>Store Managers</h3>
+    <table class="table border">
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Actions</th>
+        </tr>
+        {%for user in store_managers %}
+            <tr>
+                <td>{{user.name}}</td>
+                <td>{{user.email}}</td>
+                <td>
+                    <a class="btn btn-danger" href={{url_for('delete_user',id = user.id)}}>Delete</a>
+                </td>
+            </tr>
+        {%endfor %}
+    </table>
+    <h3>Customers</h3>
+    <table class = "table border">
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Actions</th>
+        </tr>
+        {%for user in customers %}
+            <tr>
+                <td>{{user.name}}</td>
+                <td>{{user.email}}</td>
+                <td>
+                    {% if not user.flag %}
+                    <a class="btn btn-danger" href={{url_for('deactivate_user',id = user.id)}}>Flag</a>
+                    {%else %}
+                    <a class="btn btn-success" href={{url_for('activate_user',id = user.id)}}>Unflag</a>
+                    {%endif %}
+                    <a class="btn btn-danger" href={{url_for('delete_user',id = user.id)}}>Delete</a>
+                </td>
+            </tr>
+        {%endfor %}
+    </table>
+{%endblock %}

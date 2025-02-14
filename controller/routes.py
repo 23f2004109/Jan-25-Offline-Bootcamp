@@ -2,7 +2,7 @@ from app import app
 from flask import render_template, request, session, redirect, url_for, flash
 from controller.models import * 
 
-@app.route('/dashboard')
+@app.route('/')
 def home():
     return render_template('home.html') 
 
@@ -33,6 +33,10 @@ def login():
             flash('Password incorrect')
             return render_template('login.html')
         
+        if email[0].flag:
+            flash('User is deactivated')
+            return render_template('login.html')
+                
         session['user_email'] = email[0].email
         session['role'] = email[0].roles[0].name
 
@@ -77,8 +81,7 @@ def register():
             email = email,
             password = password,
             roles = [Role.query.filter_by(name = role).first()],
-            roles = Role.query.filter_by(name = role).all()
-
+            
         )
 
         db.session.add(user)
@@ -86,6 +89,77 @@ def register():
 
         flash('User created successfully')
         return redirect(url_for('login'))
+    
+@app.route('/manage_users')
+def manage_users():
+    if not session.get('user_email',None) or session.get('role', None) != 'admin':
+        flash('Unauthorized Access')
+        return redirect(url_for('home'))
+    customers = User.query.filter(User.roles.any(name='customer')).all()
+    store_managers = User.query.filter(User.roles.any(name='manager')).all()
+    return render_template('manage_users.html', customers=customers, store_managers=store_managers)
+
+
+@app.route('/delete_user/<int:id>')
+def delete_user(id):
+    if not session.get('user_email',None) or session.get('role', None) != 'admin':
+        flash('Unauthorized Access')
+        return redirect(url_for('home'))
+    
+    user = User.query.get(id)
+
+    if not user:
+        flash('User not found')
+        return redirect(url_for('manage_users'))
+    
+    db.session.delete(user)
+    db.session.commit()
+
+    flash('User deleted successfully')
+    return redirect(url_for('manage_users'))
+
+@app.route('/deactivate_user/<int:id>')
+def deactivate_user(id):
+    if not session.get('user_email',None) or session.get('role', None) != 'admin':
+        flash('Unauthorized Access')
+        return redirect(url_for('home'))
+    
+    user = User.query.get(id)
+
+    if not user:
+        flash('User not found')
+        return redirect(url_for('manage_users'))
+    
+    user.flag = True
+    db.session.commit()
+
+    flash('User deactivated successfully')
+    return redirect(url_for('manage_users'))
+
+
+@app.route('/activate_user/<int:id>')
+def activate_user(id):
+    if not session.get('user_email',None) or session.get('role', None) != 'admin':
+        flash('Unauthorized Access')
+        return redirect(url_for('home'))
+    
+    user = User.query.get(id)
+
+    if not user:
+        flash('User not found')
+        return redirect(url_for('manage_users'))
+    
+    if not user.flag:
+        flash('User is already active')
+        return redirect(url_for('manage_users'))
+    
+    user.flag = False
+    db.session.commit()
+
+    flash('User activated successfully')
+    return redirect(url_for('manage_users'))
+
+
 
 
 @app.route('/about')
