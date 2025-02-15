@@ -36,5 +36,8 @@ class Products(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
     manufacturing_date = db.Column(db.Date, nullable=False)
     expiry_date = db.Column(db.Date, nullable=False)
+    stock = db.Column(db.Integer, nullable=False)
+    product_brochure = db.Column(db.String(100))
+
 
     category = db.relationship('Categories', backref='products')

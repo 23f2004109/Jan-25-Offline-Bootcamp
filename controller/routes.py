@@ -1,10 +1,17 @@
 from app import app
 from flask import render_template, request, session, redirect, url_for, flash
 from controller.models import * 
+import os
+from datetime import datetime
+import matplotlib.pyplot as plt
+import matplotlib
+
+matplotlib.use('Agg')
 
 @app.route('/')
 def home():
-    return render_template('home.html') 
+    categories = Categories.query.all()
+    return render_template('home.html',categories=categories) 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -250,3 +257,98 @@ def delete_category(id):
     flash('Category deleted successfully')
     return redirect(url_for('home'))
 
+@app.route('/add_product', methods=['GET', 'POST'])
+def add_product():
+    if not session.get('user_email',None) or session.get('role', None) != 'manager':
+        flash('Unauthorized Access')
+        return redirect(url_for('home'))
+    
+    if request.method == "GET":
+        categories = Categories.query.all()
+        return render_template('add_product.html', categories=categories)
+    
+    if request.method == "POST":
+        product_brochure = request.files.get('product_bochure', None)
+        filename = None
+        if product_brochure:
+            filename = os.path.join("product_details",product_brochure.filename)
+            product_brochure.save(os.path.join('static', filename))
+
+        name = request.form.get('name', None)
+        description = request.form.get('description', None)
+        price = request.form.get('cost_price', None)
+        selling_price = request.form.get('selling_price', None)
+        category_id = request.form.get('category', None)
+        manufacturing_date = datetime.strptime(request.form.get('mfg_date', None), '%Y-%m-%d')
+        expiry_date = datetime.strptime(request.form.get('expiry_date', None), '%Y-%m-%d')
+        stock = request.form.get('stock', None)
+
+
+        product = Products(
+            name = name,
+            description = description,
+            price = price,
+            selling_price = selling_price,
+            category_id = category_id,
+            manufacturing_date = manufacturing_date,
+            expiry_date = expiry_date,
+            stock = stock,
+            product_brochure = filename
+        )
+
+
+        db.session.add(product)
+        db.session.commit()
+
+        flash('Product added successfully')
+        return redirect(url_for('home'))
+    
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    if request.method == "GET":
+        return render_template('search.html')
+    
+    if request.method == "POST":
+        search = request.form.get('search', None)
+        products = Products.query.filter(Products.name.like(f'%{search}%')).all()
+        categories = Categories.query.filter(Categories.name.like(f'%{search}%')).all()
+
+
+        return render_template('search.html', products=products,categories=categories)
+    
+
+        
+@app.route("/stats")
+def stats():
+    if not session.get('user_email',None) or session.get('role', None) != 'admin':
+        flash('Unauthorized Access')
+        return redirect(url_for('home'))
+    
+    categories = Categories.query.all()
+    total_categories = len(categories)
+
+    product_count = {}
+
+    for category in categories:
+        product_count[category.name] = len(category.products)
+
+    plt.bar(product_count.keys(), product_count.values())
+    plt.xlabel('Categories')
+    plt.ylabel('Product Count')
+
+    plt.savefig('static/product_count.png')
+
+
+    product_stock = {}
+    products = Products.query.all()
+    for product in products:
+        product_stock[product.name] = product.stock
+
+    plt.bar(product_stock.keys(), product_stock.values())
+    plt.xlabel('Products')
+    plt.ylabel('Stock Count')
+
+    plt.savefig('static/product_stock.png')
+
+    return f"Total Categories : {total_categories}"  

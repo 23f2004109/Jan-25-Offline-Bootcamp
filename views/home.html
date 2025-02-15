@@ -3,6 +3,18 @@
 {% block title %} Home Page {% endblock %}
 
 {% block content %}
-    <h1>Home Page</h1>
-    <p>Welcome to the home page!</p>
+    {% if session.get('user_email',None) %}
+        {% if session.get('role',None) == 'admin' %}
+            {% include 'admin_dashboard.html' %}
+        {% elif session.get('role',None) == 'manager' %}
+            {% include 'manager_dash.html' %}
+        {% else %}
+            {% include 'cust_dash.html' %}
+        {% endif %}
+    {% else %}
+        <div>
+            <h1 class="text-center"> Welcome to the Home Page </h1>
+            <p>Please Login using the link <a href="{{url_for('login')}}">Login</a></p>
+        </div>
+    {% endif %}
 {% endblock %}

@@ -1,0 +1,16 @@
+<div>
+    <div class="">
+        {% for category in categories %}
+            <h3>{{category.name}}</h3>
+            <p>{{category.description}}</p>
+
+            <!-- Display products -->
+
+            <ul>
+                {% for product in category.products %}
+                    <li>{{product.name}} - {{product.selling_price}}</li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+    </div>
+</div>
